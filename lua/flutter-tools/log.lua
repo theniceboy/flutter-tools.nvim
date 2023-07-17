@@ -71,6 +71,11 @@ local function autoscroll(buf, target_win)
   end
 end
 
+local tmpStopNotifyingDevLogOutput = false
+function string.starts(str, start)
+  return string.sub(str, 1, string.len(start)) == start
+end
+
 ---Add lines to a buffer
 ---@param buf number
 ---@param lines string[]
@@ -78,6 +83,26 @@ local function append(buf, lines)
   vim.bo[buf].modifiable = true
   api.nvim_buf_set_lines(M.buf, -1, -1, true, lines)
   vim.bo[buf].modifiable = false
+  local validStr = {}
+  for _, line in ipairs(lines) do
+    if string.starts(line, "══╡") then
+      tmpStopNotifyingDevLogOutput = true
+      ui.notify("Encountered Layout issues", ui.WARN, { timeout = 1000 })
+    elseif string.starts(line, "════════════════════════════════════════════════════════") then
+      tmpStopNotifyingDevLogOutput = false
+    elseif not tmpStopNotifyingDevLogOutput then
+      if line == "" or
+          string.starts(line, "Another exception was thrown:") then
+      else
+        table.insert(validStr, line)
+      end
+    end
+  end
+
+  local str = table.concat(validStr, "\n")
+  if str ~= "" then
+    ui.notify(str, ui.INFO, { timeout = 1000 })
+  end
 end
 
 --- Open a log showing the output from a command
