@@ -79,22 +79,32 @@ end
 ---Add lines to a buffer
 ---@param buf number
 ---@param lines string[]
+local errorPattern = '.+:(%d+):(%d+): Error: '
+local previousCompilerErrorNotification
+local previousCompilerErrorNotificationTime = 0
+local accumulatedCompilerErrorCount = 0
 local function append(buf, lines)
   vim.bo[buf].modifiable = true
   api.nvim_buf_set_lines(M.buf, -1, -1, true, lines)
   vim.bo[buf].modifiable = false
+  local errorCount = 0
   local validStr = {}
   for _, line in ipairs(lines) do
     if string.starts(line, "══╡") then
       tmpStopNotifyingDevLogOutput = true
-      ui.notify("Encountered Layout issues", ui.WARN, { timeout = 1000 })
+      ui.notify("Encountered Layout issues", ui.WARN, {
+        timeout = 1000,
+        hide_from_history = false,
+      })
     elseif string.starts(line, "════════════════════════════════════════════════════════") then
       tmpStopNotifyingDevLogOutput = false
     elseif not tmpStopNotifyingDevLogOutput then
       if line == "" or
           string.starts(line, "Another exception was thrown:") then
-      else
-        table.insert(validStr, line)
+      elseif string.starts(line, "flutter: ") then
+        table.insert(validStr, string.sub(line, 10))
+      elseif line:match(errorPattern) then
+        errorCount = errorCount + 1
       end
     end
   end
@@ -102,6 +112,23 @@ local function append(buf, lines)
   local str = table.concat(validStr, "\n")
   if str ~= "" then
     ui.notify(str, ui.INFO, { timeout = 1000 })
+  end
+  if errorCount > 0 then
+    local curTime = os.time()
+    if curTime - previousCompilerErrorNotificationTime > 2 then
+      previousCompilerErrorNotification = nil
+      accumulatedCompilerErrorCount = errorCount
+    else
+      accumulatedCompilerErrorCount = accumulatedCompilerErrorCount + errorCount
+    end
+    previousCompilerErrorNotification = vim.notify(fmt("%s compiler errors", accumulatedCompilerErrorCount), ui.ERROR, {
+      timeout = 1000,
+      hide_from_history = false,
+      replace = previousCompilerErrorNotification,
+      icon = "",
+      title = "Flutter",
+    })
+    previousCompilerErrorNotificationTime = curTime
   end
 end
 

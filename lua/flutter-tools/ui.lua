@@ -66,7 +66,7 @@ M.notify = function(msg, level, opts)
   opts, level = opts or {}, level or M.INFO
   msg = type(msg) == "table" and utils.join(msg) or msg
   if msg == "" then return end
-  local args = { title = "Flutter tools", timeout = opts.timeout, icon = "" }
+  local args = { title = "Flutter", timeout = opts.timeout, icon = "" }
   if opts.once then
     vim.notify_once(msg, level, args)
   else
