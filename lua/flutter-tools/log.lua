@@ -84,13 +84,12 @@ local previousCompilerErrorNotification
 local previousCompilerErrorNotificationTime = 0
 local accumulatedCompilerErrorCount = 0
 local function append(buf, lines)
-  vim.bo[buf].modifiable = true
-  api.nvim_buf_set_lines(M.buf, -1, -1, true, lines)
-  vim.bo[buf].modifiable = false
   local errorCount = 0
   local validStr = {}
+  local newLines = {}
   for _, line in ipairs(lines) do
     if string.starts(line, "══╡") then
+      table.insert(newLines, "")
       tmpStopNotifyingDevLogOutput = true
       ui.notify("Encountered Layout issues", ui.WARN, {
         timeout = 1000,
@@ -107,7 +106,11 @@ local function append(buf, lines)
         errorCount = errorCount + 1
       end
     end
+    table.insert(newLines, line)
   end
+  vim.bo[buf].modifiable = true
+  api.nvim_buf_set_lines(M.buf, -1, -1, true, newLines)
+  vim.bo[buf].modifiable = false
 
   local str = table.concat(validStr, "\n")
   if str ~= "" then
