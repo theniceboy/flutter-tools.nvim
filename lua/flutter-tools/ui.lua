@@ -58,6 +58,12 @@ local function invalid_lines(lines)
   return true
 end
 
+
+local ok = pcall(require, "notify")
+if not ok then
+	vim.notify = require("notify")
+end
+
 ---Post a message to UI so the user knows something has occurred.
 ---@param msg string | string[]
 ---@param level integer
@@ -68,9 +74,9 @@ M.notify = function(msg, level, opts)
   if msg == "" then return end
   local args = { title = "Flutter", timeout = opts.timeout, icon = "" }
   if opts.once then
-    vim.notify_once(msg, level, args)
+    return vim.notify_once(msg, level, args)
   else
-    vim.notify(msg, level, args)
+    return vim.notify(msg, level, args)
   end
 end
 

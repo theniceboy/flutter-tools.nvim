@@ -51,14 +51,31 @@ function M.get_content()
   if M.buf then return api.nvim_buf_get_lines(M.buf, 0, -1, false) end
 end
 
+local function find_window_by_buffer(bufnr)
+  -- Get the list of all windows in the current tab page
+  local windows = vim.api.nvim_tabpage_list_wins(0)
+
+  -- Iterate over each window
+  for _, win in ipairs(windows) do
+    -- Get the buffer number of the current window
+    local win_bufnr = vim.api.nvim_win_get_buf(win)
+
+    -- Check if this window's buffer number matches the one we're looking for
+    if win_bufnr == bufnr then
+      -- If a match is found, return the window handle
+      return win
+    end
+  end
+
+  -- If no window was found with the specified buffer number, return nil
+  return nil
+end
+
 ---Auto-scroll the log buffer to the end of the output
 ---@param buf integer
 ---@param target_win integer
 local function autoscroll(buf, target_win)
-  local win = utils.find(
-    api.nvim_tabpage_list_wins(0),
-    function(item) return item == target_win end
-  )
+  local win = find_window_by_buffer(buf)
   if not win then return end
   -- if the dev log is focused don't scroll it as it will block the user from perusing
   if api.nvim_get_current_win() == win then return end
@@ -76,11 +93,26 @@ function string.starts(str, start)
   return string.sub(str, 1, string.len(start)) == start
 end
 
+local notifQueue = {}
+local specialNotifId = "specialNotif"
+local notifWindowSec = 3
+local notifThreshold = 10
+
+local function notifyExcessive(count, replace)
+  return require("notify").notify(fmt("%s messages", count), ui.INFO, {
+    timeout = 2000,
+    hide_from_history = false,
+    replace = replace,
+    icon = "",
+    title = "Flutter",
+  })
+end
+
 ---Add lines to a buffer
 ---@param buf number
 ---@param lines string[]
 local errorPattern = '.+:(%d+):(%d+): Error: '
-local previousCompilerErrorNotification
+local previousCompilerErrorNotification = nil
 local previousCompilerErrorNotificationTime = 0
 local accumulatedCompilerErrorCount = 0
 local function append(buf, lines)
@@ -112,19 +144,40 @@ local function append(buf, lines)
   api.nvim_buf_set_lines(M.buf, -1, -1, true, newLines)
   vim.bo[buf].modifiable = false
 
+  local curTime = os.time()
+
   local str = table.concat(validStr, "\n")
   if str ~= "" then
-    ui.notify(str, ui.INFO, { timeout = 1000 })
+    -- Clean up notifications older than 3 seconds
+    while #notifQueue > 0 and curTime - notifQueue[1].time > notifWindowSec do
+      table.remove(notifQueue, 1)
+    end
+
+    if #notifQueue < notifThreshold then
+      ui.notify(str, ui.INFO, { timeout = 1000 })
+      table.insert(notifQueue, { time = curTime })
+    else
+      if notifQueue[#notifQueue].id == specialNotifId then
+        notifQueue[#notifQueue].count = notifQueue[#notifQueue].count + 1
+        notifQueue[#notifQueue].notif = notifyExcessive(notifQueue[#notifQueue].count, notifQueue[#notifQueue].notif)
+      else
+        table.insert(notifQueue, {
+          id = specialNotifId,
+          time = curTime,
+          count = 1,
+          notif = notifyExcessive(1, nil)
+        })
+      end
+    end
   end
   if errorCount > 0 then
-    local curTime = os.time()
     if curTime - previousCompilerErrorNotificationTime > 2 then
       previousCompilerErrorNotification = nil
       accumulatedCompilerErrorCount = errorCount
     else
       accumulatedCompilerErrorCount = accumulatedCompilerErrorCount + errorCount
     end
-    previousCompilerErrorNotification = vim.notify(fmt("%s compiler errors", accumulatedCompilerErrorCount), ui.ERROR, {
+    previousCompilerErrorNotification  = require("notify").notify(fmt("%s compiler errors", accumulatedCompilerErrorCount), ui.ERROR, {
       timeout = 1000,
       hide_from_history = false,
       replace = previousCompilerErrorNotification,
