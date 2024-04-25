@@ -98,6 +98,15 @@ local specialNotifId = "specialNotif"
 local notifWindowSec = 3
 local notifThreshold = 10
 
+function handleIFlutterPattern(line)
+  local match = line:match("^I/flutter %(%d+%): (.+)$")
+  if match then
+      return true, match
+  else
+      return false, nil
+  end
+end
+
 local function notifyExcessive(count, replace)
   return require("notify").notify(fmt("%s messages", count), ui.INFO, {
     timeout = 2000,
@@ -134,11 +143,23 @@ local function append(buf, lines)
           string.starts(line, "Another exception was thrown:") then
       elseif string.starts(line, "flutter: ") then
         table.insert(validStr, string.sub(line, 10))
-      elseif line:match(errorPattern) then
-        errorCount = errorCount + 1
+      else
+        local matched, extracted = handleIFlutterPattern(line)
+        if matched then
+            table.insert(validStr, extracted)
+        elseif line:match(errorPattern) then
+          errorCount = errorCount + 1
+        end
       end
     end
-    table.insert(newLines, line)
+    if not (string.starts(line, "I/") and not string.starts(line, "I/flutter")) and
+       not string.starts(line, "V/") and
+       not string.starts(line, "D/") and
+       not string.starts(line, "W/") and
+			 true
+			then
+			table.insert(newLines, line)
+		end
   end
   vim.bo[buf].modifiable = true
   api.nvim_buf_set_lines(M.buf, -1, -1, true, newLines)
