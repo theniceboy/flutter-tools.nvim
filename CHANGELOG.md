@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.9.1](https://github.com/akinsho/flutter-tools.nvim/compare/v1.9.0...v1.9.1) (2024-05-18)
+
+
+### Bug Fixes
+
+* handle deprecated vim.tbl_islist function ([e9f6f65](https://github.com/akinsho/flutter-tools.nvim/commit/e9f6f65ca5f72123a0f1e3a162d888e3889163f2))
+* replace deprecated vim.lsp.get_active_clients with  vim.lsp.get_clients ([c19f945](https://github.com/akinsho/flutter-tools.nvim/commit/c19f94576f866888f1b84aa73c690b30de4b86fb))
+
+## [1.9.0](https://github.com/akinsho/flutter-tools.nvim/compare/v1.8.0...v1.9.0) (2024-03-28)
+
+
+### Features
+
+* **fvm:** support FVM in monorepo setup ([21c4496](https://github.com/akinsho/flutter-tools.nvim/commit/21c4496ad8e0aaca10a5abed5acef3b831b8b460))
+
+
+### Bug Fixes
+
+* **guides:** prevent overwriting custom guide colors ([#335](https://github.com/akinsho/flutter-tools.nvim/issues/335)) ([e44df1c](https://github.com/akinsho/flutter-tools.nvim/commit/e44df1c8c4cc3bc31244a775cd04a95f7de91e53))
+
+## [1.8.0](https://github.com/akinsho/flutter-tools.nvim/compare/v1.7.0...v1.8.0) (2024-02-14)
+
+
+### Features
+
+* add flutter dependency detection ([#326](https://github.com/akinsho/flutter-tools.nvim/issues/326)) ([7f93847](https://github.com/akinsho/flutter-tools.nvim/commit/7f93847e32bb00bedeb2648219584c606a860d99))
+
+
+### Bug Fixes
+
+* don't attach lsp to buffer with empty path ([78b5a42](https://github.com/akinsho/flutter-tools.nvim/commit/78b5a4249bada514be1e0471d50c6856cb416503))
+
 ## [1.7.0](https://github.com/akinsho/flutter-tools.nvim/compare/v1.6.0...v1.7.0) (2024-01-03)
 
 
