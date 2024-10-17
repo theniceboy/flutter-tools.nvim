@@ -216,6 +216,7 @@ end
 function M.log(data, opts)
   if opts.enabled then
     if not exists() then create(opts) end
+    if opts.filter and not opts.filter(data) then return end
     append(M.buf, { data })
     autoscroll(M.buf, M.win)
   end

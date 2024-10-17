@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.14.0](https://github.com/akinsho/flutter-tools.nvim/compare/v1.13.0...v1.14.0) (2024-08-29)
+
+
+### Features
+
+* **config:** add possibility to provide cwd via project configuration ([#383](https://github.com/akinsho/flutter-tools.nvim/issues/383)) ([7efc0d8](https://github.com/akinsho/flutter-tools.nvim/commit/7efc0d86094ecd80fb50e19935596acd7956255c)), closes [#329](https://github.com/akinsho/flutter-tools.nvim/issues/329)
+* respect cwd when detecting is it flutter project, handle running dart-only projects ([#384](https://github.com/akinsho/flutter-tools.nvim/issues/384)) ([cde6625](https://github.com/akinsho/flutter-tools.nvim/commit/cde66252ae44f4cafd130fd2c4e117dcd36b05b5)), closes [#375](https://github.com/akinsho/flutter-tools.nvim/issues/375)
+
+
+### Bug Fixes
+
+* **dap:** attach debugger on windows ([#381](https://github.com/akinsho/flutter-tools.nvim/issues/381)) ([d8f2eac](https://github.com/akinsho/flutter-tools.nvim/commit/d8f2eac1734e0e68050bc57600e5f2ba775b1ec4))
+
+## [1.13.0](https://github.com/akinsho/flutter-tools.nvim/compare/v1.12.0...v1.13.0) (2024-08-23)
+
+
+### Features
+
+* **CI:** add ability to trigger CI workflow manually ([b6b62ba](https://github.com/akinsho/flutter-tools.nvim/commit/b6b62baa0ade0b78c44a452244aadbc4f74082e6))
+* **dap:** add option `evaluate_to_string_in_debug_views` ([#377](https://github.com/akinsho/flutter-tools.nvim/issues/377)) ([0842bbe](https://github.com/akinsho/flutter-tools.nvim/commit/0842bbedf43bb3643b3b8402160687b5bb90054b))
+
+
+### Bug Fixes
+
+* adapt to nvim depractions ([#379](https://github.com/akinsho/flutter-tools.nvim/issues/379)) ([e951b0a](https://github.com/akinsho/flutter-tools.nvim/commit/e951b0a1bcc5abe2d801e3a1762b37b0fbbf2acd))
+
+## [1.12.0](https://github.com/akinsho/flutter-tools.nvim/compare/v1.11.0...v1.12.0) (2024-08-19)
+
+
+### Features
+
+* **labels:** add option to set closing tag virtual text priority ([#373](https://github.com/akinsho/flutter-tools.nvim/issues/373)) ([18a28d6](https://github.com/akinsho/flutter-tools.nvim/commit/18a28d6e4c71bb85a1cd5ce0ce42a63dfcdfa4c6))
+
+## [1.11.0](https://github.com/akinsho/flutter-tools.nvim/compare/v1.10.0...v1.11.0) (2024-08-14)
+
+
+### Features
+
+* add ability to filter flutter output in dev log ([#371](https://github.com/akinsho/flutter-tools.nvim/issues/371)) ([654c477](https://github.com/akinsho/flutter-tools.nvim/commit/654c4779a42575d12edd8177e70263d63ae39833))
+
 ## [1.10.0](https://github.com/akinsho/flutter-tools.nvim/compare/v1.9.1...v1.10.0) (2024-06-25)
 
 

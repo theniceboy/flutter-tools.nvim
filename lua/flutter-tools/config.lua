@@ -4,15 +4,16 @@ local ui = lazy.require("flutter-tools.ui") ---@module "flutter-tools.ui"
 local utils = lazy.require("flutter-tools.utils") ---@module "flutter-tools.utils"
 
 ---@class flutter.ProjectConfig
----@field name string?
----@field device string
----@field pre_run_callback fun(opts: {string: string})
----@field flavor string
----@field target string
----@field dart_define {[string]: string}
----@field dart_define_from_file string
----@field flutter_mode string
----@field web_port number
+---@field name? string
+---@field device? string
+---@field pre_run_callback? fun(opts: {string: string})
+---@field flavor? string
+---@field target? string
+---@field dart_define? {[string]: string}
+---@field dart_define_from_file? string
+---@field flutter_mode? string
+---@field web_port? number
+---@field cwd? string full path of current working directory, defaults to LSP root
 
 local M = {}
 
@@ -81,34 +82,14 @@ local config = {
   },
   debugger = {
     enabled = false,
-    run_via_dap = false,
     exception_breakpoints = nil,
-    register_configurations = function(paths)
-      require("dap").configurations.dart = {
-        {
-          type = "dart",
-          request = "launch",
-          name = "Launch flutter",
-          dartSdkPath = paths.dart_sdk,
-          flutterSdkPath = paths.flutter_sdk,
-          program = "${workspaceFolder}/lib/main.dart",
-          cwd = "${workspaceFolder}",
-        },
-        {
-          type = "dart",
-          request = "attach",
-          name = "Connect flutter",
-          dartSdkPath = paths.dart_sdk,
-          flutterSdkPath = paths.flutter_sdk,
-          program = "${workspaceFolder}/lib/main.dart",
-          cwd = "${workspaceFolder}",
-        },
-      }
-    end,
+    evaluate_to_string_in_debug_views = true,
+    register_configurations = nil,
   },
   closing_tags = {
     highlight = "Comment",
     prefix = "// ",
+    priority = 10,
     enabled = true,
   },
   lsp = {
@@ -128,6 +109,7 @@ local config = {
     __index = function(_, k) return k == "open_cmd" and get_split_cmd(0.3, 40) or nil end,
   }),
   dev_log = setmetatable({
+    filter = nil,
     enabled = true,
     notify_errors = false,
   }, {
