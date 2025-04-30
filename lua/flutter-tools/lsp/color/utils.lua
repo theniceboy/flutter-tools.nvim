@@ -1,5 +1,5 @@
 local tohex, bor, lshift, rshift, band = bit.tohex, bit.bor, bit.lshift, bit.rshift, bit.band
-local validate, api = vim.validate, vim.api
+local api = vim.api
 
 local lazy = require("flutter-tools.lazy")
 local ui = lazy.require("flutter-tools.ui") ---@module "flutter-tools.ui"
@@ -32,20 +32,32 @@ end
 ---@return RGB rgb_table
 --- FIXME: this currently does not support transparent backgrounds. Need a replacement for bg_rgb
 function M.rgba_to_rgb(rgba, bg_rgb)
-  validate({
-    rgba = { rgba, "t", true },
-    bg_rgb = { bg_rgb, "t", false },
-    r = { rgba.r, "n", true },
-    g = { rgba.g, "n", true },
-    b = { rgba.b, "n", true },
-    a = { rgba.a, "n", true },
-  })
+  if vim.fn.has("nvim-0.11") == 1 then
+    vim.validate("rgba", rgba, "table", true)
+    vim.validate("bg_rgb", bg_rgb, "table", false)
+    vim.validate("r", rgba.r, "number", true)
+    vim.validate("g", rgba.g, "number", true)
+    vim.validate("b", rgba.b, "number", true)
+    vim.validate("a", rgba.a, "number", true)
+    vim.validate("bg_r", bg_rgb.r, "number", true)
+    vim.validate("bg_g", bg_rgb.g, "number", true)
+    vim.validate("bg_b", bg_rgb.b, "number", true)
+  else
+    vim.validate({
+      rgba = { rgba, "table", true },
+      bg_rgb = { bg_rgb, "table", false },
+      r = { rgba.r, "number", true },
+      g = { rgba.g, "number", true },
+      b = { rgba.b, "number", true },
+      a = { rgba.a, "number", true },
+    })
 
-  validate({
-    bg_r = { bg_rgb.r, "n", true },
-    bg_g = { bg_rgb.g, "n", true },
-    bg_b = { bg_rgb.b, "n", true },
-  })
+    vim.validate({
+      bg_r = { bg_rgb.r, "number", true },
+      bg_g = { bg_rgb.g, "number", true },
+      bg_b = { bg_rgb.b, "number", true },
+    })
+  end
 
   local r = rgba.r * rgba.a + bg_rgb.r * (1 - rgba.a)
   local g = rgba.g * rgba.a + bg_rgb.g * (1 - rgba.a)
@@ -56,13 +68,21 @@ end
 
 --- Returns a string containing the 6 digit hex value for a given RGB.
 ---@param rgb RGB with keys 'r', 'g', 'b' in [0,255]
----@return number 6 digit hex representing the rgb params
+---@return string 6 digit hex representing the rgb params
 local function rgb_to_hex(rgb)
-  validate({
-    r = { rgb.r, "n", false },
-    g = { rgb.g, "n", false },
-    b = { rgb.b, "n", false },
-  })
+  if vim.fn.has("nvim-0.11") == 1 then
+    vim.validate("rgb", rgb, "table", false)
+    vim.validate("r", rgb.r, "number", false)
+    vim.validate("g", rgb.g, "number", false)
+    vim.validate("b", rgb.b, "number", false)
+  else
+    vim.validate({
+      rgb = { rgb, "table", false },
+      r = { rgb.r, "number", false },
+      g = { rgb.g, "number", false },
+      b = { rgb.b, "number", false },
+    })
+  end
   return tohex(bor(lshift(rgb.r, 16), lshift(rgb.g, 8), rgb.b), 6)
 end
 
@@ -70,7 +90,7 @@ end
 --- the @rgba with the background @bg_rgb.
 ---
 ---@param rgba RGBA
----@return number 6 digit hex
+---@return string 6 digit hex
 function M.rgba_to_hex(rgba, bg_rgb) return rgb_to_hex(M.rgba_to_rgb(rgba, bg_rgb)) end
 
 --- Returns a table containing the RGB values encoded inside 24 least
@@ -78,7 +98,11 @@ function M.rgba_to_hex(rgba, bg_rgb) return rgb_to_hex(M.rgba_to_rgb(rgba, bg_rg
 ---@param rgb_24bit number 24-bit RGB value
 ---@return RGB
 function M.decode_24bit_rgb(rgb_24bit)
-  validate({ rgb_24bit = { rgb_24bit, "n", true } })
+  if vim.fn.has("nvim-0.11") == 1 then
+    vim.validate("rgb_24bit", rgb_24bit, "number", true)
+  else
+    vim.validate({ rgb_24bit = { rgb_24bit, "number", true } })
+  end
   local r = band(rshift(rgb_24bit, 16), 255)
   local g = band(rshift(rgb_24bit, 8), 255)
   local b = band(rgb_24bit, 255)
@@ -163,7 +187,7 @@ local function color_virtual_text(_, bufnr, range, rgb, virtual_text_str)
   local hex = rgb_to_hex(rgb)
   local hlname = create_set_hl("LspDocumentColorVirtualText", { foreground = hex })
   local line = range["end"]["line"]
-  if line <= api.nvim_buf_line_count(0) then
+  if line <= api.nvim_buf_line_count(bufnr) then
     api.nvim_buf_set_extmark(bufnr, CLIENT_NS, line, -1, {
       virt_text = { { virtual_text_str, hlname } },
     })
@@ -195,7 +219,15 @@ end
 ---@param color_infos table of `ColorInformation` objects to highlight.
 -- See https://microsoft.github.io/language-server-protocol/specification#textDocument_documentColor
 function M.buf_color(client_id, bufnr, color_infos, _)
-  validate({ bufnr = { bufnr, "n", false }, color_infos = { color_infos, "t", false } })
+  if vim.fn.has("nvim-0.11") == 1 then
+    vim.validate("bufnr", bufnr, "number", true)
+    vim.validate("color_infos", color_infos, "table", true)
+  else
+    vim.validate({
+      bufnr = { bufnr, "number", true },
+      color_infos = { color_infos, "table", true },
+    })
+  end
   if not color_infos or not bufnr then return end
   local c = config.lsp.color
 
@@ -218,7 +250,15 @@ end
 ---@param client_id number client id
 ---@param bufnr number buffer id
 function M.buf_clear_color(client_id, bufnr)
-  validate({ client_id = { client_id, "n", true }, bufnr = { bufnr, "n", true } })
+  if vim.fn.has("nvim-0.11") == 1 then
+    vim.validate("client_id", client_id, "number", true)
+    vim.validate("bufnr", bufnr, "number", true)
+  else
+    vim.validate({
+      client_id = { client_id, "number", true },
+      bufnr = { bufnr, "number", true },
+    })
+  end
   if api.nvim_buf_is_valid(bufnr) then api.nvim_buf_clear_namespace(bufnr, CLIENT_NS, 0, -1) end
 end
 

@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   tests:
@@ -13,7 +16,7 @@ jobs:
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Neovim
         shell: bash
         run: |
@@ -34,7 +37,7 @@ jobs:
     needs: tests
     if: ${{ github.ref == 'refs/heads/main' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: panvimdoc
         uses: kdheepak/panvimdoc@main
         with:
@@ -58,17 +61,15 @@ jobs:
       - tests
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: googleapis/release-please-action@v4
         id: release
         with:
           release-type: simple
           package-name: flutter-tools.nvim
-          # extra-files: |
-          #   lua/flutter-tools/core/config.lua
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: tag stable versions
         if: ${{ steps.release.outputs.release_created }}
         run: |
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
-          git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/google-github-actions/release-please-action.git"
+          git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/googleapis/release-please-action.git"
