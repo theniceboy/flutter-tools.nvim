@@ -31,6 +31,8 @@ local current_device = nil
 ---@type flutter.Runner?
 local runner = nil
 
+local fvm_name = path.is_windows and "fvm.bat" or "fvm"
+
 local function use_debugger_runner(force_debug)
   if force_debug or config.debugger.enabled then
     local dap_ok, _ = pcall(require, "dap")
@@ -494,7 +496,7 @@ local fvm_list_job = nil
 --- Returns table<{name: string, status: active|global|nil}>
 function M.fvm_list(callback)
   if not fvm_list_job then
-    fvm_list_job = Job:new({ command = "fvm", args = { "api", "list" } })
+    fvm_list_job = Job:new({ command = fvm_name, args = { "api", "list" } })
 
     fvm_list_job:after_success(vim.schedule_wrap(function(j)
       local out = j:result()
@@ -533,7 +535,7 @@ local fvm_use_job = nil
 
 function M.fvm_use(sdk_name)
   if not fvm_use_job then
-    fvm_use_job = Job:new({ command = "fvm", args = { "use", sdk_name } })
+    fvm_use_job = Job:new({ command = fvm_name, args = { "use", sdk_name } })
 
     fvm_use_job:after_success(vim.schedule_wrap(function(j)
       ui.notify(utils.join(j:result()))
