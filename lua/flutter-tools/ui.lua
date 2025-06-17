@@ -10,6 +10,12 @@ local entry_type = {
 ---@generic T
 ---@alias SelectionEntry {text: string, type: EntryType, data: T}
 
+---@class flutter.WindowOpts
+---@field open_cmd? string Command to open the window
+---@field filename? string Name to give the buffer
+---@field filetype string Filetype to set for the buffer
+---@field focus_on_open? boolean Whether to focus the window after opening
+
 ---@enum
 local M = {
   ERROR = vim.log.levels.ERROR,
@@ -135,7 +141,7 @@ function M.select(opts)
 end
 
 ---Create a split window
----@param opts table
+---@param opts flutter.WindowOpts
 ---@param on_open fun(buf: integer, win: integer)
 ---@return nil
 function M.open_win(opts, on_open)
@@ -149,6 +155,7 @@ function M.open_win(opts, on_open)
   vim.bo[buf].filetype = opts.filetype
   vim.bo[buf].swapfile = false
   vim.bo[buf].buftype = "nofile"
+  vim.bo[buf].buflisted = false
   if on_open then on_open(buf, win) end
   if not opts.focus_on_open then
     -- Switch back to the previous window
