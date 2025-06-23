@@ -1,6 +1,7 @@
 local lazy = require("flutter-tools.lazy")
 local utils = lazy.require("flutter-tools.utils") ---@module "flutter-tools.utils"
 local path = lazy.require("flutter-tools.utils.path") ---@module "flutter-tools.utils.path"
+local ui = lazy.require("flutter-tools.ui") ---@module "flutter-tools.ui"
 local color = lazy.require("flutter-tools.lsp.color") ---@module "flutter-tools.lsp.color"
 local lsp_utils = lazy.require("flutter-tools.lsp.utils") ---@module "flutter-tools.lsp.utils"
 
@@ -166,7 +167,15 @@ function M.restart()
 end
 
 ---@return string?
-function M.get_lsp_root_dir()
+function M.get_project_root_dir()
+  local conf = require("flutter-tools.config")
+  local current_buffer_path = path.current_buffer_path()
+  local root_path = lsp_utils.is_valid_path(current_buffer_path)
+      and path.find_root(conf.root_patterns, current_buffer_path)
+    or nil
+
+  if root_path ~= nil then return root_path end
+
   local client = lsp_utils.get_dartls_client()
   return client and client.config.root_dir or nil
 end
@@ -216,12 +225,24 @@ local function get_server_config(user_config, callback)
   local executable = require("flutter-tools.executable")
   --- TODO: if a user specifies a command we do not need to call executable.get
   executable.get(function(paths)
+    if not paths then
+      ui.notify(
+        "Flutter executable could not be found, please make sure that flutter_path is given"
+          .. " or flutter_lookup_cmd is given or fvm is setup or that the flutter binary is "
+          .. "in your path"
+      )
+      return
+    end
     local defaults = get_defaults({ flutter_sdk = paths.flutter_sdk })
     local root_path = paths.dart_sdk
     local debug_log = create_debug_log(user_config.debug)
     debug_log(fmt("dart_sdk_path: %s", root_path))
 
     config.cmd = config.cmd or { paths.dart_bin, "language-server", "--protocol=lsp" }
+
+    if config.analyzer_web_port then
+      table.insert(config.cmd, "--port=" .. tostring(config.analyzer_web_port))
+    end
 
     config.filetypes = { FILETYPE }
     config.capabilities = merge_config(defaults.capabilities, config.capabilities)
@@ -231,7 +252,11 @@ local function get_server_config(user_config, callback)
     config.commands = merge_config(defaults.commands, config.commands)
 
     config.on_init = function(client, _)
-      return client.notify("workspace/didChangeConfiguration", { settings = config.settings })
+      if vim.fn.has("nvim-0.12") == 0 then
+        return client.notify("workspace/didChangeConfiguration", { settings = config.settings })
+      else
+        return client:notify("workspace/didChangeConfiguration", { settings = config.settings })
+      end
     end
     callback(config)
   end)
@@ -260,7 +285,7 @@ function M.attach()
   if not is_valid_path(buffer_path) then return end
 
   get_server_config(user_config, function(c)
-    c.root_dir = M.get_lsp_root_dir()
+    c.root_dir = M.get_project_root_dir()
       or fs.dirname(fs.find(conf.root_patterns, {
         path = buffer_path,
         upward = true,
